@@ -1,0 +1,46 @@
+<h2>Blackjack</h2>
+
+<br/>
+
+<b>Dealer Cards:</b>
+<% if session[:dealer_flag] == "dealer_turn" %>
+  <ul class="display_cards">
+    <% session[:dealer_hand].each do |card| %>
+      <li class="cards"><%= card[1] + card[0] %></li>
+    <% end %>
+    <b><li class="total">Total: <%= total(session[:dealer_hand]) %></li></b>
+  </ul>
+<% else %>
+  <ul class="display_cards">
+    <li class="cards">
+      <%= session[:dealer_hand].first[1] + session[:dealer_hand].first[0] %>
+    </li>
+    <li class="cards">??</li>
+    <b><li class="total">Total: ??</li></b>
+  </ul>
+<% end %>
+
+<br/>
+
+<b><%= "#{session[:username]}'s Cards:" %></b>
+<ul class="display_cards">
+  <% session[:player_hand].each do |card| %>
+    <li class="cards"><%= card[1] + card[0] %></li>
+  <% end %>
+  <b><li class="total">Total: <%= total(session[:player_hand]) %></li></b>
+</ul>
+
+<br/>
+
+<% if session[:dealer_flag] %>
+  <form action="/deal_again">
+    <input type="submit" class="btn" value="Deal Again?">
+  </form>
+<% else %>
+  <form action="/hit" method="post" class="hit_stay_btn">
+    <input type="submit" class="btn" value="Hit">
+  </form>
+  <form action="/stand" method="post" class="hit_stay_btn">
+    <input type="submit" class="btn" value="Stand">
+  </form>
+<% end %>

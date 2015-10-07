@@ -1,0 +1,15 @@
+.display_cards {
+    list-style: none;
+}
+
+.hit_stay_btn {
+    display: inline;
+}
+
+.cards {
+    padding-left: 5em;
+}
+
+.total {
+    padding-left: 2em;
+}
