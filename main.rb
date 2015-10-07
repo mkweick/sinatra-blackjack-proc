@@ -33,17 +33,65 @@ helpers do
   
   def player_blackjack_or_bust?(hand)
     session[:dealer_flag] = "dealer_turn" if blackjack?(hand)
-    session[:dealer_flag] = "player_bust" if bust?(hand)
+    session[:dealer_flag] = "finish" if bust?(hand)
   end
   
   def dealer_turn(hand)
     while total(hand) < 17
       hand << session[:deck].shift
     end
+    session[:dealer_flag] = "finish"
+  end
+  
+  def card_image(card)
+    suit = case card[0]
+      when "H" then "hearts"
+      when "D" then "diamonds"
+      when "C" then "clubs"
+      when "S" then "spades"
+    end
+    
+    rank = card[1]
+    if ['J', 'Q', 'K', 'A'].include? rank
+      rank = case card[1]
+        when "J" then "jack"
+        when "Q" then "queen"
+        when "K" then "king"
+        when "A" then "ace"
+      end
+    end
+    
+    "<img src='/images/cards/#{suit}_#{rank}.jpg' class='card_image'>"
+  end
+  
+  def check_winner?
+    if session[:dealer_flag] == "finish"
+      @result = announce_winner(session[:player_hand], session[:dealer_hand])
+    end
   end
 
   def announce_winner(player, dealer)
-    
+    if bust?(player)
+      "#{session[:username]} Lost. You Busted!"
+    elsif blackjack?(player)
+      if blackjack?(dealer)
+        "Tie! Both players have Blackjack!"
+      else
+        "#{session[:username]} Won! You hit Blackjack!"
+      end
+    elsif blackjack?(dealer)
+      "#{session[:username]} Lost. Dealer has Blackjack!"
+    elsif bust?(dealer)
+      "#{session[:username]} Won! The Dealer Busted!"
+    else
+      if total(player) > total(dealer)
+        "#{session[:username]} Won! You have a higher score than the dealer!"
+      elsif total(dealer) > total(player)
+        "#{session[:username]} Lost. Dealer has a higher score than you."
+      else
+        "Tie! Both players have the same score!"
+      end
+    end
   end
   
   def reset_game_values
@@ -82,34 +130,39 @@ post '/new_player' do
 end
 
 get '/game' do
-  if session[:deck].nil? && session[:player_hand].nil?
-    suits = ["\u2660", "\u2663", "\u2665", "\u2666"]
-    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-    session[:deck] = suits.product(ranks).shuffle!
-    session[:player_hand] = []
-    session[:dealer_hand] = []
-    session[:dealer_flag] = nil
-    2.times do
+  suits = ["H", "D", "C", "S"]
+  ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+  session[:deck] = suits.product(ranks).shuffle!
+  session[:dealer_flag] = nil
+  session[:player_hand] = []
+  session[:dealer_hand] = []
+  
+  2.times do
       session[:player_hand] << session[:deck].shift
       session[:dealer_hand] << session[:deck].shift
-    end
-    
-    player_blackjack_or_bust?(session[:player_hand])
-    dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
   end
-  
+    
+  player_blackjack_or_bust?(session[:player_hand])
+  dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
+  check_winner?
   erb :game
 end
 
-post '/hit' do
+post '/game/player/hit' do
   session[:player_hand] << session[:deck].shift
   player_blackjack_or_bust?(session[:player_hand])
   dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  redirect '/game'
+  check_winner?
+  erb :game
 end
 
-post '/stand' do
+post '/game/player/stand' do
   session[:dealer_flag] = "dealer_turn"
   dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  redirect '/game'
+  check_winner?
+  erb :game
+end
+
+get '/game_over' do
+  erb :game_over
 end

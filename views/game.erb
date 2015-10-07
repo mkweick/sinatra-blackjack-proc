@@ -1,46 +1,42 @@
 <h2>Blackjack</h2>
+<h3><strong><%= @result %></strong></h3>
 
-<br/>
-
-<b>Dealer Cards:</b>
-<% if session[:dealer_flag] == "dealer_turn" %>
+<h4><strong>Dealer Cards:
+<% if session[:dealer_flag] == "dealer_turn" || session[:dealer_flag] == "finish" %>
+  <%= total(session[:dealer_hand]) %></strong></h4>
   <ul class="display_cards">
-    <% session[:dealer_hand].each do |card| %>
-      <li class="cards"><%= card[1] + card[0] %></li>
+    <% session[:dealer_hand].each_with_index do |card| %>
+      <li><%= card_image(card) %></li>
     <% end %>
-    <b><li class="total">Total: <%= total(session[:dealer_hand]) %></li></b>
   </ul>
 <% else %>
+  ??</strong></h4>
   <ul class="display_cards">
-    <li class="cards">
-      <%= session[:dealer_hand].first[1] + session[:dealer_hand].first[0] %>
-    </li>
-    <li class="cards">??</li>
-    <b><li class="total">Total: ??</li></b>
+    <li><%= card_image(session[:dealer_hand].first) %></li>
+    <li><img src='/images/cards/cover.jpg' class='card_image'></li>
   </ul>
 <% end %>
-
 <br/>
 
-<b><%= "#{session[:username]}'s Cards:" %></b>
+<h4><strong>
+  <%= "#{session[:username]}'s Cards: " %> <%= total(session[:player_hand]) %>
+</strong></h4>
 <ul class="display_cards">
   <% session[:player_hand].each do |card| %>
-    <li class="cards"><%= card[1] + card[0] %></li>
+    <li><%= card_image(card) %></li>
   <% end %>
-  <b><li class="total">Total: <%= total(session[:player_hand]) %></li></b>
 </ul>
-
 <br/>
 
 <% if session[:dealer_flag] %>
-  <form action="/deal_again">
-    <input type="submit" class="btn" value="Deal Again?">
-  </form>
+  <h4><strong>Deal Again?</strong></h4>
+  <a href="/deal_again" class="btn btn-primary">Yes</a>
+  <a href="/game_over" class="btn">No</a>
 <% else %>
-  <form action="/hit" method="post" class="hit_stay_btn">
-    <input type="submit" class="btn" value="Hit">
+  <form action="/game/player/hit" method="post" class="hit_stay_btn">
+    <input type="submit" class="btn btn-primary" value="Hit">
   </form>
-  <form action="/stand" method="post" class="hit_stay_btn">
-    <input type="submit" class="btn" value="Stand">
+  <form action="/game/player/stand" method="post" class="hit_stay_btn">
+    <input type="submit" class="btn btn-primary" value="Stand">
   </form>
 <% end %>
