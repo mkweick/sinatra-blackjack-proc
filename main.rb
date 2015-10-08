@@ -31,7 +31,7 @@ helpers do
     total(hand) > 21
   end
   
-  def player_blackjack_or_bust?(hand)
+  def set_player_blackjack_or_bust_flag(hand)
     session[:dealer_flag] = "dealer_turn" if blackjack?(hand)
     session[:dealer_flag] = "finish" if bust?(hand)
   end
@@ -64,7 +64,7 @@ helpers do
     "<img src='/images/cards/#{suit}_#{rank}.jpg' class='card_image'>"
   end
   
-  def check_winner?
+  def determine_winner
     if session[:dealer_flag] == "finish"
       @result = announce_winner(session[:player_hand], session[:dealer_hand])
     end
@@ -142,24 +142,24 @@ get '/game' do
       session[:dealer_hand] << session[:deck].shift
   end
     
-  player_blackjack_or_bust?(session[:player_hand])
+  set_player_blackjack_or_bust_flag(session[:player_hand])
   dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  check_winner?
+  determine_winner
   erb :game
 end
 
 post '/game/player/hit' do
   session[:player_hand] << session[:deck].shift
-  player_blackjack_or_bust?(session[:player_hand])
+  set_player_blackjack_or_bust_flag(session[:player_hand])
   dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  check_winner?
+  determine_winner
   erb :game
 end
 
 post '/game/player/stand' do
   session[:dealer_flag] = "dealer_turn"
   dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  check_winner?
+  determine_winner
   erb :game
 end
 
