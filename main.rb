@@ -32,6 +32,10 @@ helpers do
     session[:dealer_hand]
   end
   
+  def dealer_flag
+    @dealer_flag
+  end
+  
   def total(hand)
     total = 0
     hand.each { |card| total += CARD_VALUES[card[1]] }
@@ -146,16 +150,18 @@ post '/name_and_cash' do
 end
 
 get '/bet' do
-  if session[:cash] < 10
+  if cash < 10
     @error = "You have insufficeint funds to play!"
     erb :game_over
+  elsif name.nil? || cash.nil?
+    redirect '/new_game'
   else
     erb :bet
   end
 end
 
 post '/bet' do
-  if params[:bet].to_i > session[:cash]
+  if params[:bet].to_i > cash
     @error = "You do not have suffcient funds"
     erb :bet
   elsif params[:bet].to_i < 10
@@ -184,8 +190,8 @@ get '/game' do
     end
       
     set_player_blackjack_or_bust_flag(player_hand)
-    dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
-    if @dealer_flag == "finish"
+    dealer_turn(dealer_hand) if dealer_flag == "dealer_turn"
+    if dealer_flag == "finish"
       determine_winner
       complete_payout
     end
@@ -196,8 +202,8 @@ end
 post '/game/player/hit' do
   player_hand << deck.shift
   set_player_blackjack_or_bust_flag(player_hand)
-  dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
-  if @dealer_flag == "finish"
+  dealer_turn(dealer_hand) if dealer_flag == "dealer_turn"
+  if dealer_flag == "finish"
     determine_winner
     complete_payout
     erb :game
@@ -208,8 +214,8 @@ end
 
 post '/game/player/stand' do
   @dealer_flag = "dealer_turn"
-  dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
-  if @dealer_flag == "finish"
+  dealer_turn(dealer_hand) if dealer_flag == "dealer_turn"
+  if dealer_flag == "finish"
     determine_winner
     complete_payout
     erb :game

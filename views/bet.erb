@@ -1,13 +1,9 @@
-<% if name.nil? || cash.nil? %>
-  <% redirect '/new_game' %>
-<% else %>
-  <div class="text-center">
-    <p class="<%= @error ? "box-alert" : "box" %>"><%= name %>'s Cash: <%= cash %></p>
-    <form action="/bet" method="post">
-      <input type="text" name="bet" placeholder="Bet Amount (Min $10)" 
-              autofocus="autofocus" autocomplete="off">
-      <br/>
-      <input type="submit" value="Deal Cards" class="btn btn-primary form-btn">
-    </form>
-  </div>
-<% end %>
+<div class="text-center">
+  <p class="<%= @error ? "box-alert" : "box" %>"><%= name %>'s Cash: <%= cash %></p>
+  <form action="/bet" method="post">
+    <input type="text" name="bet" placeholder="Bet Amount (Min $10)" 
+            autofocus="autofocus" autocomplete="off">
+    <br/>
+    <input type="submit" value="Deal Cards" class="btn btn-primary form-btn">
+  </form>
+</div>
