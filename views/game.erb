@@ -1,42 +1,56 @@
-<h2>Blackjack</h2>
-<h3><strong><%= @result %></strong></h3>
-
-<h4><strong>Dealer Cards:
-<% if session[:dealer_flag] == "dealer_turn" || session[:dealer_flag] == "finish" %>
-  <%= total(session[:dealer_hand]) %></strong></h4>
-  <ul class="display_cards">
-    <% session[:dealer_hand].each_with_index do |card| %>
-      <li><%= card_image(card) %></li>
+<div id="game">
+  <div class="text-center">
+    <% if @dealer_flag %>
+      <div class="deal-again-box">
+        <span id="deal-again">Deal Again?</span>
+        <a href="/bet" class="btn btn-primary">Yes</a>
+        <a href="/game_over" class="btn">No</a>
+      </div>
     <% end %>
-  </ul>
-<% else %>
-  ??</strong></h4>
-  <ul class="display_cards">
-    <li><%= card_image(session[:dealer_hand].first) %></li>
-    <li><img src='/images/cards/cover.jpg' class='card_image'></li>
-  </ul>
-<% end %>
-<br/>
-
-<h4><strong>
-  <%= "#{session[:username]}'s Cards: " %> <%= total(session[:player_hand]) %>
-</strong></h4>
-<ul class="display_cards">
-  <% session[:player_hand].each do |card| %>
-    <li><%= card_image(card) %></li>
-  <% end %>
-</ul>
-<br/>
-
-<% if session[:dealer_flag] %>
-  <h4><strong>Deal Again?</strong></h4>
-  <a href="/deal_again" class="btn btn-primary">Yes</a>
-  <a href="/game_over" class="btn">No</a>
-<% else %>
-  <form action="/game/player/hit" method="post" class="hit_stay_btn">
-    <input type="submit" class="btn btn-primary" value="Hit">
-  </form>
-  <form action="/game/player/stand" method="post" class="hit_stay_btn">
-    <input type="submit" class="btn btn-primary" value="Stand">
-  </form>
-<% end %>
+    </br>
+    <div class="<%= @error || @neutral || @success ? "dealer-cards-alert" : "dealer-cards" %>">
+      <% if @dealer_flag == "dealer_turn" || @dealer_flag == "finish" %>
+        <div class="total"><%= total(dealer_hand) %></div>
+        <ul class="display-cards">
+          <li><%= first_card_image(dealer_hand.first) %></li>
+          <% dealer_hand.each_with_index do |card, index| %>
+            <% next if index == 0 %>
+            <li><%= card_image(card, index) %></li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div class="total">---</div>
+        <ul class="display-cards">
+          <li><%= first_card_image(dealer_hand.first) %></li>
+          <li><img src='/images/cards1/cover.png' class='card-row'></li>
+        </ul>
+      <% end %>
+    </div>
+    
+    <div class="player-cards">
+      <div class="total">
+        <%= (4..9).to_a.include?(total(player_hand)) ? ("0" + total(player_hand).to_s) : total(player_hand) %>
+      </div>
+      <ul class="display-cards">
+        <li><%= first_card_image(player_hand.first) %></li>
+        <% player_hand.each_with_index do |card, index| %>
+          <% next if index == 0 %>
+          <li><%= card_image(card, index) %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+  
+  <div id="footer">
+    <div id="footer-content">
+      <% unless @dealer_flag %>
+        <form id="hit-form" action="/game/player/hit" method="post" class="hit-stay-btn">
+          <input type="submit" class="btn btn-success custom" value="Hit">
+        </form>
+        <form id="stay-form" action="/game/player/stand" method="post" class="hit-stay-btn">
+          <input type="submit" class="btn btn-warning custom" value="Stand">
+        </form>
+      <% end %>
+    </div>
+  </div>
+</div>

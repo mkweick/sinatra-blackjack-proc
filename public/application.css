@@ -1,15 +1,129 @@
-.display_cards {
-    list-style: none;
+/* GLOBAL */
+
+body {
+  background-image: URL('/images/bg.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
-.display_cards li {
-    display: inline;
+.box {
+  margin: 12.1% 0px 5%;
+  color: white;
+  font-size: 40px;
 }
 
-.card_image {
-    padding-left: 5px;
+.box-alert{
+  margin: 6% 0px 5%;
+  color: white;
+  font-size: 40px;
 }
 
-.hit_stay_btn {
-    display: inline;
+.form-btn {
+  margin-top: 20px;
+}
+
+/* GAME */
+
+.total {
+  display: inline-block;
+  font-size: 50px;
+  color: white;
+}
+
+.display-cards {
+  display: inline;
+  list-style: none;
+}
+
+.display-cards li {
+  display: inline;
+  color: white;
+}
+
+.dealer-cards {
+  margin-top: 20%;
+}
+
+.dealer-cards-alert {
+  margin-top: 10%;
+}
+
+.player-cards {
+  margin-top: 30%;
+}
+
+.hit-stay-btn {
+  display: inline-block;
+  margin: 25px 20px 0px;
+}
+
+.custom {
+  width: 78px !important;
+  height: 50px;
+}
+
+.deal-again-box {
+  height: 40px;
+  width: 250px;
+  display: inline-block;
+  background: rgba(0,0,0,0.5);
+  border-radius: 10px;
+  padding-top: 10px;
+}
+
+#deal-again {
+  font-size: 1.3em;
+  margin-right: 10px;
+  color: white;
+}
+
+.card-first {
+  position: relative;
+}
+
+.card-row {
+  position: absolute;
+  left: 51.2%;
+}
+
+/* GAME FOOTER */
+
+#footer {
+  position: fixed;
+  left: 0px;
+  bottom: 0px;
+  height: 100px;
+  width: 100%;
+  background: rgba(0,0,0,0.5);
+}
+
+#footer-content {
+  text-align: center;
+}
+
+/* GAME OVER */
+
+.game-over-msg-box {
+  margin-top: 50px;
+  height: 180px;
+  width: 100%;
+  display: inline-block;
+  background: rgba(0,0,0,0.5);
+  border-radius: 10px;
+  padding-top: 10px;
+}
+
+.game-over-msg {
+  color: white;
+}
+
+.game-over-btn {
+  margin-top: 20px;
+}
+
+/* ALERTS */
+
+.alert {
+  font-weight: bold;
+  display: inline-block;
 }

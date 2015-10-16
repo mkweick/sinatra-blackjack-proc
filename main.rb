@@ -4,12 +4,34 @@ require 'sinatra'
 use Rack::Session::Cookie, :key => 'rack.session',
                            :path => '/',
                            :secret => 'mysecretphrase'
-
 CARD_VALUES = { "2" => 2, "3" => 3, "4" => 4, "5" => 5, "6" => 6, "7" => 7, 
                 "8" => 8, "9" => 9, "10" => 10, "J" => 10, "Q" => 10, 
                 "K" => 10, "A" => 11 }
-
 helpers do
+  def name
+    session[:name]
+  end
+  
+  def cash
+    session[:cash]
+  end
+  
+  def bet
+    session[:bet]
+  end
+  
+  def deck
+    session[:deck]
+  end
+  
+  def player_hand
+    session[:player_hand]
+  end
+  
+  def dealer_hand
+    session[:dealer_hand]
+  end
+  
   def total(hand)
     total = 0
     hand.each { |card| total += CARD_VALUES[card[1]] }
@@ -32,65 +54,63 @@ helpers do
   end
   
   def set_player_blackjack_or_bust_flag(hand)
-    session[:dealer_flag] = "dealer_turn" if blackjack?(hand)
-    session[:dealer_flag] = "finish" if bust?(hand)
+    @dealer_flag = "dealer_turn" if blackjack?(hand)
+    @dealer_flag = "finish" if bust?(hand)
   end
   
   def dealer_turn(hand)
     while total(hand) < 17
-      hand << session[:deck].shift
+      hand << deck.shift
     end
-    session[:dealer_flag] = "finish"
+    @dealer_flag = "finish"
   end
   
-  def card_image(card)
-    suit = case card[0]
-      when "H" then "hearts"
-      when "D" then "diamonds"
-      when "C" then "clubs"
-      when "S" then "spades"
-    end
-    
+  def card_image(card, shift)
+    offset = 50.5 + shift
+    suit = card[0]
     rank = card[1]
-    if ['J', 'Q', 'K', 'A'].include? rank
-      rank = case card[1]
-        when "J" then "jack"
-        when "Q" then "queen"
-        when "K" then "king"
-        when "A" then "ace"
-      end
-    end
-    
-    "<img src='/images/cards/#{suit}_#{rank}.jpg' class='card_image'>"
+    "<img src='/images/cards/#{suit}#{rank}.png' style='position: absolute; left: #{offset}%;'>"
+  end
+  
+  def first_card_image(card)
+    suit = card[0]
+    rank = card[1]
+    "<img src='/images/cards/#{suit}#{rank}.png' class='card-first'>"
   end
   
   def determine_winner
-    if session[:dealer_flag] == "finish"
-      @result = announce_winner(session[:player_hand], session[:dealer_hand])
-    end
+    announce_winner(player_hand, dealer_hand)
   end
 
   def announce_winner(player, dealer)
     if bust?(player)
-      "#{session[:username]} Lost. You Busted!"
+      @error = "#{ name } lost $#{ bet }. You Busted!"
     elsif blackjack?(player)
       if blackjack?(dealer)
-        "Tie! Both players have Blackjack!"
+        @neutral = "Push!"
       else
-        "#{session[:username]} Won! You hit Blackjack!"
+        @success = "#{ name } won $#{ bet }! You hit Blackjack!"
       end
     elsif blackjack?(dealer)
-      "#{session[:username]} Lost. Dealer has Blackjack!"
+      @error = "#{ name } lost $#{ bet }. Dealer has Blackjack!"
     elsif bust?(dealer)
-      "#{session[:username]} Won! The Dealer Busted!"
+      @success = "#{ name } won $#{ bet }! The Dealer Busted!"
     else
       if total(player) > total(dealer)
-        "#{session[:username]} Won! You have a higher score than the dealer!"
+        @success = "#{ name } won $#{ bet }! You beat the dealer!"
       elsif total(dealer) > total(player)
-        "#{session[:username]} Lost. Dealer has a higher score than you."
+        @error = "#{ name } lost $#{ bet }. Dealer has highest score."
       else
-        "Tie! Both players have the same score!"
+        @neutral = "Push!"
       end
+    end
+  end
+  
+  def complete_payout
+    if @success
+      session[:cash] += bet
+    elsif @error
+      session[:cash] -= bet
     end
   end
   
@@ -98,21 +118,104 @@ helpers do
     session[:deck] = nil
     session[:player_hand] = nil
     session[:dealer_hand] = nil
-    session[:dealer_flag] = nil
+    session[:bet] = nil
+    @dealer_flag = nil
   end
 end
 
 get '/' do
-  if session[:username]
+  if name && cash > 9
     redirect '/game'
   else
-    redirect '/new_player'
+    redirect '/new_game'
   end
 end
 
-get '/new_game' do
-  session.clear
-  redirect '/'
+post '/name_and_cash' do
+  if params[:name].empty?
+    @error = "Name cannot be empty"
+    erb :new_player
+  elsif params[:cash].to_i > 1000 || params[:cash].to_i < 10 
+    @error = "There is Min of $10 and Max of $1000 for Cash at this table"
+    erb :new_player
+  else
+    session[:name] = params[:name].capitalize
+    session[:cash] = params[:cash].to_i
+    redirect '/bet'
+  end
+end
+
+get '/bet' do
+  if session[:cash] < 10
+    @error = "You have insufficeint funds to play!"
+    erb :game_over
+  else
+    erb :bet
+  end
+end
+
+post '/bet' do
+  if params[:bet].to_i > session[:cash]
+    @error = "You do not have suffcient funds"
+    erb :bet
+  elsif params[:bet].to_i < 10
+    @error = "The minimum bet is $10"
+    erb :bet
+  else
+    session[:bet] = params[:bet].to_i
+    redirect '/game'
+  end
+end
+
+get '/game' do
+  if bet.nil?
+    erb :bet
+  else
+    suits = ["H", "D", "C", "S"]
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+    session[:deck] = suits.product(ranks).shuffle!
+    session[:player_hand] = []
+    session[:dealer_hand] = []
+    @dealer_flag = nil
+    
+    2.times do
+      player_hand << deck.shift
+      dealer_hand << deck.shift
+    end
+      
+    set_player_blackjack_or_bust_flag(player_hand)
+    dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
+    if @dealer_flag == "finish"
+      determine_winner
+      complete_payout
+    end
+    erb :game
+  end
+end
+
+post '/game/player/hit' do
+  player_hand << deck.shift
+  set_player_blackjack_or_bust_flag(player_hand)
+  dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
+  if @dealer_flag == "finish"
+    determine_winner
+    complete_payout
+    erb :game
+  else
+    erb :game, layout: false
+  end
+end
+
+post '/game/player/stand' do
+  @dealer_flag = "dealer_turn"
+  dealer_turn(dealer_hand) if @dealer_flag == "dealer_turn"
+  if @dealer_flag == "finish"
+    determine_winner
+    complete_payout
+    erb :game
+  else
+    erb :game, layout: false
+  end
 end
 
 get '/deal_again' do
@@ -120,47 +223,9 @@ get '/deal_again' do
   redirect '/game'
 end
 
-get '/new_player' do
+get '/new_game' do
+  session.clear
   erb :new_player
-end
-
-post '/new_player' do
-  session[:username] = params[:username].capitalize
-  redirect '/game'
-end
-
-get '/game' do
-  suits = ["H", "D", "C", "S"]
-  ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-  session[:deck] = suits.product(ranks).shuffle!
-  session[:dealer_flag] = nil
-  session[:player_hand] = []
-  session[:dealer_hand] = []
-  
-  2.times do
-      session[:player_hand] << session[:deck].shift
-      session[:dealer_hand] << session[:deck].shift
-  end
-    
-  set_player_blackjack_or_bust_flag(session[:player_hand])
-  dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  determine_winner
-  erb :game
-end
-
-post '/game/player/hit' do
-  session[:player_hand] << session[:deck].shift
-  set_player_blackjack_or_bust_flag(session[:player_hand])
-  dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  determine_winner
-  erb :game
-end
-
-post '/game/player/stand' do
-  session[:dealer_flag] = "dealer_turn"
-  dealer_turn(session[:dealer_hand]) if session[:dealer_flag] == "dealer_turn"
-  determine_winner
-  erb :game
 end
 
 get '/game_over' do

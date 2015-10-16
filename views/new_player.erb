@@ -1,7 +1,8 @@
-<h4>What's your name?</h4>
-
-<form action="/new_player" method="post">
-  <input type="text" name="username">
-  <br/>
-  <input type="submit" class="btn">
-</form>
+<div class="text-center">
+  <p class="<%= @error ? "box-alert" : "box" %>">Welcome to Blackjack!</p>
+  <form action="/name_and_cash" method="post">
+    <input type="text" name="name" placeholder="Name" autofocus="autofocus" autocomplete="off"><br/>
+    <input type="text" name="cash" placeholder="Cash (Min 10 / Max 1000)" autocomplete="off"><br/>
+    <input type="submit" value="Let's Play" class="btn btn-primary form-btn">
+  </form>
+</div>

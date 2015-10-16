@@ -1,4 +1,9 @@
-<h2><%= session[:username] %>, thanks for playing!</h2>
-
-
-<a href='/new_game' class="btn btn-primary">Play Again</a>
+<div class="text-center game-over-msg-box">
+  <% if name.nil? %>
+    <% redirect '/' %>
+  <% else %>
+    <h2 class="game-over-msg"><%= name %>, thanks for playing!</h2>
+    <h2 class="game-over-msg">You walked away with $<%= cash %>.</h2>
+    <a href='/new_game' class="btn btn-primary game-over-btn">Play Again</a>
+  <% end %>
+</div>
